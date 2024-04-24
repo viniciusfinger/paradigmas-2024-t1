@@ -332,9 +332,9 @@ int float_cmp(const void *lhs, const void* rhs) {
     }
 }
 
-int Lista_search(Lista *lista, void *key, int (*cmp)(const void *, const void *))
+int Lista_search(Lista *lista, void *key, int (*func_cmp)(const void *, const void *))
 {
-    if (lista == NULL || key == NULL || cmp == NULL)
+    if (lista == NULL || key == NULL || func_cmp == NULL)
     {
         return 0;
     }
@@ -343,8 +343,7 @@ int Lista_search(Lista *lista, void *key, int (*cmp)(const void *, const void *)
 
     while (current_node != NULL)
     {
-        printf("Comparando %d com %d\n", *((int*)current_node->data), *((int*)key));
-        if (cmp(current_node->data, key) == 0)
+        if (func_cmp(current_node->data, key) == 0)
         {
             return 1;
         }
@@ -352,4 +351,51 @@ int Lista_search(Lista *lista, void *key, int (*cmp)(const void *, const void *)
     }
 
     return 0;
+}
+
+//to-do: refatorar todas as funcoes para ver o que tem de código em comum e reaproveitar
+void Lista_remove(Lista *lista, void *key, int (*func_cmp)(const void *, const void *))
+{
+    if (lista == NULL || key == NULL || func_cmp == NULL)
+    {
+        return;
+    }
+
+    NodeLista *node_pointer = lista->head;
+    NodeLista *previous_node = NULL;
+
+    while (node_pointer != NULL)
+    {
+        if (func_cmp(node_pointer->data, key) == 0)
+        {
+            if (previous_node == NULL)
+            {
+                lista->head = node_pointer->next;
+            }
+            else
+            {
+                previous_node->next = node_pointer->next;
+            }
+
+            if (lista->tail == node_pointer)
+            {
+                lista->tail = previous_node;
+            }
+
+            if (lista->free_data != NULL)
+            {
+                lista->free_data(node_pointer->data);
+            }
+
+            free(node_pointer->data);
+            free(node_pointer);
+
+            lista->size--;
+
+            return;
+        }
+
+        previous_node = node_pointer;
+        node_pointer = node_pointer->next;
+    }
 }
